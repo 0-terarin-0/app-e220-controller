@@ -21,9 +21,9 @@ export default function SerialConnectButton() {
       await requestedPort.open({ baudRate: 9600 });
 
       setPort(requestedPort);
-      console.log("E220と接続完了や！");
+      console.log("Connected with E220");
     } catch (err: any) {
-      console.error("シリアル接続エラー:", err);
+      console.error("Erroe while connecting:", err);
       setError(err.message);
     }
   };
@@ -32,32 +32,32 @@ export default function SerialConnectButton() {
     if (port) {
       await port.close();
       setPort(null);
-      console.log("切断しました");
+      console.log("Disconnected.");
     }
   };
 
   return (
-    <div className="p-4 border rounded-lg shadow-sm bg-white text-black">
-      <h2 className="text-xl font-bold mb-4">E220 接続パネル</h2>
+    <div className="p-4 border-border rounded-lg shadow-sm bg-background text-foreground border">
+      <h2 className="text-xl font-bold mb-4">Connect</h2>
 
       {!port ? (
         <button
           onClick={connectSerial}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="bg-primary text-primary-foreground font-bold py-2 px-4 rounded"
         >
-          E220に接続する
+          Connect to E220
         </button>
       ) : (
         <button
           onClick={disconnectSerial}
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+          className="bg-accent text-accent-foreground font-bold py-2 px-4 rounded"
         >
-          切断する
+          Disconnect
         </button>
       )}
 
-      {port && <p className="mt-4 text-green-600 font-bold">🟢 接続済み</p>}
-      {error && <p className="mt-4 text-red-600">❌ エラー: {error}</p>}
+      {port && <p className="mt-4 text-green-600 font-bold">🟢 Connected</p>}
+      {error && <p className="mt-4 text-red-600">❌ Error: {error}</p>}
     </div>
   );
 }
