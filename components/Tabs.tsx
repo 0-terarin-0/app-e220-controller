@@ -1,75 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import {
+  Tabs as ShadcnTabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
-// Placeholder components for each tab's content
-const NormalModeTab = () => <div>通常モードのコンテンツ</div>;
-const SettingsModeTab = () => <div>設定モードのコンテンツ</div>;
-const ReceiveModeTab = () => <div>受信モードのコンテンツ</div>;
-const SendModeTab = () => <div>送信モードのコンテンツ</div>;
+import NormalModeTab from "@/components/NormalModeTab";
+import SettingsModeTab from "@/components/SettingsModeTab";
+import ReceiveModeTab from "@/components/ReceiveModeTab";
+import SendModeTab from "@/components/SendModeTab";
 
-type Tab = "normal" | "settings" | "receive" | "send";
-
-const Tabs = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("normal");
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "normal":
-        return <NormalModeTab />;
-      case "settings":
-        return <SettingsModeTab />;
-      case "receive":
-        return <ReceiveModeTab />;
-      case "send":
-        return <SendModeTab />;
-      default:
-        return null;
-    }
-  };
-
-  const getButtonClasses = (tabName: Tab) => {
-    const isActive = activeTab === tabName;
-    return `py-2 px-4 cursor-pointer rounded-t-md mr-1 border ${
-      isActive
-        ? "bg-background text-primary border-b-transparent -mb-px"
-        : "bg-secondary text-secondary-foreground border-border hover:bg-accent hover:text-accent-foreground"
-    }`;
-  };
-
+export default function Tabs() {
   return (
-    <div className="mt-4">
-      <div className="flex border-b border-border">
-        <button
-          className={getButtonClasses("normal")}
-          onClick={() => setActiveTab("normal")}
-        >
-          通常モード
-        </button>
-        <button
-          className={getButtonClasses("settings")}
-          onClick={() => setActiveTab("settings")}
-        >
-          設定モード
-        </button>
-        <button
-          className={getButtonClasses("receive")}
-          onClick={() => setActiveTab("receive")}
-        >
-          受信モード
-        </button>
-        <button
-          className={getButtonClasses("send")}
-          onClick={() => setActiveTab("send")}
-        >
-          送信モード
-        </button>
-      </div>
-      <div className="p-5 border-x border-b border-border rounded-b-md bg-background">
-        {renderContent()}
-      </div>
-    </div>
+    <ShadcnTabs defaultValue="normal" className="w-full">
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="normal">通常モード</TabsTrigger>
+        <TabsTrigger value="settings">設定モード</TabsTrigger>
+        <TabsTrigger value="receive">受信モード</TabsTrigger>
+        <TabsTrigger value="send">送信モード</TabsTrigger>
+      </TabsList>
+      <TabsContent value="normal">
+        <NormalModeTab />
+      </TabsContent>
+      <TabsContent value="settings">
+        <SettingsModeTab />
+      </TabsContent>
+      <TabsContent value="receive">
+        <ReceiveModeTab />
+      </TabsContent>
+      <TabsContent value="send">
+        <SendModeTab />
+      </TabsContent>
+    </ShadcnTabs>
   );
-};
-
-export default Tabs;
+}
