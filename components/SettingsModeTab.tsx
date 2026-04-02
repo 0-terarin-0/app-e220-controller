@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { useSerial } from "@/contexts/SerialContext";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,7 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Save, Download, AlertCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SettingsModeTab() {
   const { port } = useSerial();
@@ -55,12 +51,14 @@ export default function SettingsModeTab() {
 
   const handleReadSettings = async () => {
     if (!port) {
-      alert("シリアルポートが接続されていません。先にConnectしてください。");
+      toast.error(
+        "シリアルポートが接続されていません。先にConnectしてください。",
+      );
       return;
     }
 
     if (!port.readable || !port.writable) {
-      alert("ポートの読み書きができません。");
+      toast.error("ポートの読み書きができません。");
       return;
     }
 
@@ -218,7 +216,7 @@ export default function SettingsModeTab() {
         );
       }
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
       if (reader) await reader.cancel();
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
@@ -229,11 +227,13 @@ export default function SettingsModeTab() {
 
   const handleSaveSettings = async () => {
     if (!port) {
-      alert("シリアルポートが接続されていません。先にConnectしてください。");
+      toast.error(
+        "シリアルポートが接続されていません。先にConnectしてください。",
+      );
       return;
     }
     if (!port.writable) {
-      alert("ポートの書き込みができません。");
+      toast.error("ポートの書き込みができません。");
       return;
     }
 
@@ -333,187 +333,198 @@ export default function SettingsModeTab() {
       await writer.write(command);
       writer.releaseLock();
 
-      alert("モジュールに設定を書き込みました。");
+      toast.success("モジュールに設定を書き込みました。");
     } catch (err: any) {
       console.error("Error writing settings:", err);
-      alert(`設定の書き込みに失敗しました: ${err.message}`);
+      toast.error(`設定の書き込みに失敗しました: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6 mt-4 text-left">
-      {/* Warning Banner */}
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-md p-4 flex items-start gap-3">
-        <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
-        <div className="text-sm text-amber-600 dark:text-amber-400">
-          <p className="font-semibold mb-1">設定の読み書き時の注意</p>
-          <p>
-            E220モジュールの設定を操作するには、モジュールの{" "}
-            <strong>M0ピン と M1ピン の両方を HIGH(1)</strong>{" "}
-            にして設定モードにする必要があります。また、この状態ではモジュール内部のボーレートは{" "}
-            <strong>9600 bps に固定</strong>されます。
-          </p>
+    <div className="flex flex-col h-full text-left overflow-hidden">
+      {/* Fixed Header Section */}
+      <div className="shrink-0 space-y-4 pb-4">
+        {/* Warning Banner */}
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-md p-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-amber-600 dark:text-amber-400">
+            <p className="font-semibold mb-1">設定の読み書き時の注意</p>
+            <p>
+              E220モジュールの設定を操作するには、モジュールの{" "}
+              <strong>M0ピン と M1ピン の両方を HIGH(1)</strong>{" "}
+              にして設定モードにする必要があります。また、この状態ではモジュール内部のボーレートは{" "}
+              <strong>9600 bps に固定</strong>されます。
+            </p>
+          </div>
+        </div>
+
+        {/* Control Buttons */}
+        <div className="flex justify-end gap-4">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleReadSettings}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            モジュールから読み込む
+          </Button>
+          <Button
+            className="gap-2"
+            onClick={handleSaveSettings}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            モジュールへ書き込む
+          </Button>
         </div>
       </div>
 
-      {/* Control Buttons */}
-      <div className="flex justify-end gap-4 mb-4">
-        <Button
-          variant="outline"
-          className="gap-2"
-          onClick={handleReadSettings}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Download className="h-4 w-4" />
-          )}
-          モジュールから読み込む
-        </Button>
-        <Button
-          className="gap-2"
-          onClick={handleSaveSettings}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
-          モジュールへ書き込む
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Basic Configuration */}
-        <Card className="shadow-none border-border">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">
-              基本設定 (Address & Channel)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">モジュールアドレス (ADDH, ADDL)</Label>
-              <Input
-                id="address"
-                placeholder="0x0000"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Hexフォーマット: 0x0000 - 0xFFFF
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="channel">通信チャンネル (REG2)</Label>
-              <Input
-                id="channel"
-                type="number"
-                placeholder="15"
-                value={channel}
-                onChange={(e) => setChannel(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                0 - 83 (通信周波数: 400M + CH * 1M)
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="crypto">暗号化キー (CRYPT)</Label>
-              <Input
-                id="crypto"
-                placeholder="0x0000"
-                value={cryptoKey}
-                onChange={(e) => setCryptoKey(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Hexフォーマット: 0x0000 - 0xFFFF (Write-only usually)
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* REG0: UART & RF Rate */}
-        <Card className="shadow-none border-border">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">通信速度 (REG0)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+      {/* Scrollable Form Content */}
+      <ScrollArea className="flex-1 w-full rounded-md border bg-muted/10 p-0 sm:p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4 sm:p-0 pb-6">
+          {/* Basic Configuration */}
+          <Card className="shadow-none border-border">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">
+                基本設定 (Address & Channel)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>UART ボーレート</Label>
-                <Select value={uartBaudRate} onValueChange={setUartBaudRate}>
+                <Label htmlFor="address">モジュールアドレス (ADDH, ADDL)</Label>
+                <Input
+                  id="address"
+                  placeholder="0x0000"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Hexフォーマット: 0x0000 - 0xFFFF
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="channel">通信チャンネル (REG2)</Label>
+                <Input
+                  id="channel"
+                  type="number"
+                  placeholder="15"
+                  value={channel}
+                  onChange={(e) => setChannel(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  0 - 83 (通信周波数: 400M + CH * 1M)
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="crypto">暗号化キー (CRYPT)</Label>
+                <Input
+                  id="crypto"
+                  placeholder="0x0000"
+                  value={cryptoKey}
+                  onChange={(e) => setCryptoKey(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Hexフォーマット: 0x0000 - 0xFFFF (Write-only usually)
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* REG0: UART & RF Rate */}
+          <Card className="shadow-none border-border">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">通信速度 (REG0)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>UART ボーレート</Label>
+                  <Select value={uartBaudRate} onValueChange={setUartBaudRate}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Baud Rate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1200">1200 bps</SelectItem>
+                      <SelectItem value="2400">2400 bps</SelectItem>
+                      <SelectItem value="4800">4800 bps</SelectItem>
+                      <SelectItem value="9600">9600 bps</SelectItem>
+                      <SelectItem value="19200">19200 bps</SelectItem>
+                      <SelectItem value="38400">38400 bps</SelectItem>
+                      <SelectItem value="57600">57600 bps</SelectItem>
+                      <SelectItem value="115200">115200 bps</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>UART パリティ</Label>
+                  <Select value={uartParity} onValueChange={setUartParity}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Parity" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="8N1">8N1 (None)</SelectItem>
+                      <SelectItem value="8O1">8O1 (Odd)</SelectItem>
+                      <SelectItem value="8E1">8E1 (Even)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>エアデータレート (Air Data Rate)</Label>
+                <Select value={airDataRate} onValueChange={setAirDataRate}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Baud Rate" />
+                    <SelectValue placeholder="Data Rate" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1200">1200 bps</SelectItem>
-                    <SelectItem value="2400">2400 bps</SelectItem>
-                    <SelectItem value="4800">4800 bps</SelectItem>
-                    <SelectItem value="9600">9600 bps</SelectItem>
-                    <SelectItem value="19200">19200 bps</SelectItem>
-                    <SelectItem value="38400">38400 bps</SelectItem>
-                    <SelectItem value="57600">57600 bps</SelectItem>
-                    <SelectItem value="115200">115200 bps</SelectItem>
+                    <SelectItem value="0.3">0.3 kbps (最長距離)</SelectItem>
+                    <SelectItem value="1.2">1.2 kbps</SelectItem>
+                    <SelectItem value="2.4">2.4 kbps (デフォルト)</SelectItem>
+                    <SelectItem value="4.8">4.8 kbps</SelectItem>
+                    <SelectItem value="9.6">9.6 kbps</SelectItem>
+                    <SelectItem value="19.2">19.2 kbps</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>UART パリティ</Label>
-                <Select value={uartParity} onValueChange={setUartParity}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Parity" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="8N1">8N1 (None)</SelectItem>
-                    <SelectItem value="8O1">8O1 (Odd)</SelectItem>
-                    <SelectItem value="8E1">8E1 (Even)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>エアデータレート (Air Data Rate)</Label>
-              <Select value={airDataRate} onValueChange={setAirDataRate}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Data Rate" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0.3">0.3 kbps (最長距離)</SelectItem>
-                  <SelectItem value="1.2">1.2 kbps</SelectItem>
-                  <SelectItem value="2.4">2.4 kbps (デフォルト)</SelectItem>
-                  <SelectItem value="4.8">4.8 kbps</SelectItem>
-                  <SelectItem value="9.6">9.6 kbps</SelectItem>
-                  <SelectItem value="19.2">19.2 kbps</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* REG1: Transmission Settings */}
-        <Card className="shadow-none border-border">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">パケット & 出力 (REG1)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          {/* REG1: Transmission Settings */}
+          <Card className="shadow-none border-border">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">パケット & 出力 (REG1)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>最大パケット長</Label>
+                <Label>サブパケットサイズ</Label>
                 <Select value={subPacketSize} onValueChange={setSubPacketSize}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Size" />
+                    <SelectValue placeholder="Packet Size" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="200">200 Bytes</SelectItem>
-                    <SelectItem value="128">128 Bytes</SelectItem>
-                    <SelectItem value="64">64 Bytes</SelectItem>
-                    <SelectItem value="32">32 Bytes</SelectItem>
+                    <SelectItem value="200">200 bytes</SelectItem>
+                    <SelectItem value="128">128 bytes</SelectItem>
+                    <SelectItem value="64">64 bytes</SelectItem>
+                    <SelectItem value="32">32 bytes</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>アンビエントノイズ RSSI 出力</Label>
+                <Switch
+                  checked={ambientNoiseRssi}
+                  onCheckedChange={setAmbientNoiseRssi}
+                />
               </div>
               <div className="space-y-2">
                 <Label>送信出力 (Tx Power)</Label>
@@ -522,36 +533,29 @@ export default function SettingsModeTab() {
                     <SelectValue placeholder="Power" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="22">22 dBm (最強)</SelectItem>
+                    <SelectItem value="22">22 dBm</SelectItem>
                     <SelectItem value="17">17 dBm</SelectItem>
                     <SelectItem value="13">13 dBm</SelectItem>
                     <SelectItem value="10">10 dBm</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="flex items-center justify-between mt-4 p-3 bg-muted/50 rounded-lg border">
-              <div className="space-y-0.5">
-                <Label className="text-base">環境ノイズ RSSI 出力</Label>
-                <p className="text-xs text-muted-foreground">
-                  コマンドで環境ノイズの強度を読み取れるようにする
-                </p>
-              </div>
-              <Switch
-                checked={ambientNoiseRssi}
-                onCheckedChange={setAmbientNoiseRssi}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* REG3: Advanced Options */}
-        <Card className="shadow-none border-border">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">高度な機能 (REG3)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          {/* REG3: Advanced Options */}
+          <Card className="shadow-none border-border">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">高度な設定 (REG3)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>RSSI バイト付与 (受信パケット)</Label>
+                <Switch
+                  checked={rssiByteEnable}
+                  onCheckedChange={setRssiByteEnable}
+                />
+              </div>
               <div className="space-y-2">
                 <Label>送信モード</Label>
                 <Select
@@ -559,19 +563,27 @@ export default function SettingsModeTab() {
                   onValueChange={setTransmissionMethod}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Mode" />
+                    <SelectValue placeholder="Transmission Method" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="transparent">透過伝送</SelectItem>
-                    <SelectItem value="fixed">固定伝送 (定点通信)</SelectItem>
+                    <SelectItem value="transparent">
+                      トランスペアレント送信 (透過)
+                    </SelectItem>
+                    <SelectItem value="fixed">
+                      Fixed送信 (固定アドレス)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              <div className="flex items-center justify-between">
+                <Label>LBT (Listen Before Talk) 有効</Label>
+                <Switch checked={lbtEnable} onCheckedChange={setLbtEnable} />
+              </div>
               <div className="space-y-2">
-                <Label>WOR 周期</Label>
+                <Label>WOR サイクル (Wake-on-Radio)</Label>
                 <Select value={worCycle} onValueChange={setWorCycle}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Cycle" />
+                    <SelectValue placeholder="WOR Cycle" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="500">500 ms</SelectItem>
@@ -585,35 +597,10 @@ export default function SettingsModeTab() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="flex flex-col gap-3 mt-4">
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
-                <div className="space-y-0.5">
-                  <Label>受信パケット RSSI 付与</Label>
-                  <p className="text-xs text-muted-foreground">
-                    受信データの末尾に信号強度(RSSI)バイトを付加する
-                  </p>
-                </div>
-                <Switch
-                  checked={rssiByteEnable}
-                  onCheckedChange={setRssiByteEnable}
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
-                <div className="space-y-0.5">
-                  <Label>LBT (Listen Before Talk)</Label>
-                  <p className="text-xs text-muted-foreground">
-                    送信前に周囲の電波状況を確認し、混信を防ぐ
-                  </p>
-                </div>
-                <Switch checked={lbtEnable} onCheckedChange={setLbtEnable} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
     </div>
   );
 }

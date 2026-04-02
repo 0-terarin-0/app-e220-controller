@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { tauriSerial } from "@/lib/tauri-serial";
 
 type PortInfo = {
   vid?: number;
@@ -26,14 +27,23 @@ export function SerialProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
 
-      if (!("serial" in navigator)) {
-        throw new Error(
-          "This Browser is not compatible. Please use Chromium-based browsers.",
-        );
-      }
+      const isTauriEnv =
+        typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+      let requestedPort: any;
 
-      const requestedPort = await (navigator as any).serial.requestPort();
-      await requestedPort.open({ baudRate });
+      if (isTauriEnv) {
+        requestedPort = await tauriSerial.requestPort();
+        await requestedPort.open({ baudRate });
+      } else {
+        if (!("serial" in navigator)) {
+          throw new Error(
+            "This Browser is not compatible. Please use Chromium-based browsers or the Tauri app.",
+          );
+        }
+
+        requestedPort = await (navigator as any).serial.requestPort();
+        await requestedPort.open({ baudRate });
+      }
 
       setPort(requestedPort);
 

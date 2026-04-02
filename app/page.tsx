@@ -1,29 +1,36 @@
 import SerialConnectButton from "@/components/SerialConnectButton";
 import Tabs from "@/components/Tabs";
 import ThemeToggleButton from "@/components/ThemeToggleButton";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 export default function Home() {
   return (
-    <main className="relative flex min-h-screen flex-col items-center pt-24 pb-12 px-4 md:px-8 bg-background text-foreground">
-      <div className="absolute top-6 right-6 z-50">
+    <main className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
+      {/* Title Bar / Header */}
+      <header className="flex h-14 shrink-0 items-center justify-between border-b bg-muted/30 px-6">
+        <div className="flex items-center gap-3">
+          <div className="h-3 w-3 rounded-full bg-primary/80 shadow-[0_0_8px_rgba(var(--primary),0.5)]"></div>
+          <h1 className="text-sm font-semibold tracking-wider text-foreground/90 uppercase">
+            E220 Workspace
+          </h1>
+        </div>
         <ThemeToggleButton />
-      </div>
+      </header>
 
-      <div className="w-full max-w-3xl">
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-12">
-          E220 Web Controller
-        </h1>
+      {/* Connection Toolbar */}
+      <section className="flex shrink-0 items-center justify-center border-b bg-card px-6 py-4 shadow-sm z-10">
+        <div className="w-full">
+          <SerialConnectButton />
+        </div>
+      </section>
 
-        <Card className="text-left shadow-md">
-          <CardContent className="flex flex-col p-8 md:p-10">
-            <SerialConnectButton />
-            <Separator className="my-8" />
+      {/* Main Content Area */}
+      <section className="flex flex-1 flex-col overflow-hidden bg-muted/10 p-0 sm:p-4">
+        <div className="flex h-full w-full flex-col overflow-hidden rounded-md border-0 sm:border bg-card shadow-none sm:shadow-sm">
+          <div className="flex flex-col flex-1 overflow-hidden p-4">
             <Tabs />
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
