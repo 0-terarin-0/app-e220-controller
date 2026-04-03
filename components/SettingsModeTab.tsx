@@ -17,8 +17,10 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Save, Download, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export default function SettingsModeTab() {
+  const { t } = useTranslation();
   const { port } = useSerial();
 
   // --- State variables for all E220 registers ---
@@ -52,13 +54,13 @@ export default function SettingsModeTab() {
   const handleReadSettings = async () => {
     if (!port) {
       toast.error(
-        "シリアルポートが接続されていません。先にConnectしてください。",
+        t("messages.connect_first", "Serial port is not connected. Please connect first."),
       );
       return;
     }
 
     if (!port.readable || !port.writable) {
-      toast.error("ポートの読み書きができません。");
+      toast.error(t("messages.cannot_read_write", "Port is not readable or writable."));
       return;
     }
 
@@ -212,7 +214,7 @@ export default function SettingsModeTab() {
         console.log("Settings successfully read from E220:", data);
       } else {
         throw new Error(
-          "不正なデータを受信しました。モジュールが設定モードではない可能性があります。",
+          t("messages.invalid_data_received", "Invalid data received. Module might not be in settings mode."),
         );
       }
     } catch (err: any) {
@@ -228,12 +230,12 @@ export default function SettingsModeTab() {
   const handleSaveSettings = async () => {
     if (!port) {
       toast.error(
-        "シリアルポートが接続されていません。先にConnectしてください。",
+        t("messages.connect_first", "Serial port is not connected. Please connect first."),
       );
       return;
     }
     if (!port.writable) {
-      toast.error("ポートの書き込みができません。");
+      toast.error(t("messages.cannot_write", "Port is not writable."));
       return;
     }
 
@@ -333,10 +335,10 @@ export default function SettingsModeTab() {
       await writer.write(command);
       writer.releaseLock();
 
-      toast.success("モジュールに設定を書き込みました。");
+      toast.success(t("messages.settings_written_success", "Settings successfully written to the module."));
     } catch (err: any) {
       console.error("Error writing settings:", err);
-      toast.error(`設定の書き込みに失敗しました: ${err.message}`);
+      toast.error(t("messages.settings_write_failed", { message: err.message, defaultValue: `Failed to write settings: ${err.message}` }));
     } finally {
       setIsLoading(false);
     }
@@ -350,12 +352,12 @@ export default function SettingsModeTab() {
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-md p-4 flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
           <div className="text-sm text-amber-600 dark:text-amber-400">
-            <p className="font-semibold mb-1">設定の読み書き時の注意</p>
+            <p className="font-semibold mb-1">{t("settings_mode.warning_title", "Important Notes for Read/Write Settings")}</p>
             <p>
-              E220モジュールの設定を操作するには、モジュールの{" "}
-              <strong>M0ピン と M1ピン の両方を HIGH(1)</strong>{" "}
-              にして設定モードにする必要があります。また、この状態ではモジュール内部のボーレートは{" "}
-              <strong>9600 bps に固定</strong>されます。
+              {t("settings_mode.warning_desc_1", "To configure the E220 module, ")} 
+              <strong>{t("settings_mode.warning_desc_m0_m1", "both M0 and M1 pins MUST be HIGH (1)")}</strong>{" "}
+              {t("settings_mode.warning_desc_2", " to enter Settings Mode. In this mode, the module's internal baud rate is ")} 
+              <strong>{t("settings_mode.warning_desc_baudrate", "fixed at 9600 bps")}</strong>{t("settings_mode.warning_desc_3", ".")}
             </p>
           </div>
         </div>
@@ -373,7 +375,7 @@ export default function SettingsModeTab() {
             ) : (
               <Download className="h-4 w-4" />
             )}
-            モジュールから読み込む
+            {t("settings_mode.read_from_module", "Read from Module")}
           </Button>
           <Button
             className="gap-2"
@@ -385,7 +387,7 @@ export default function SettingsModeTab() {
             ) : (
               <Save className="h-4 w-4" />
             )}
-            モジュールへ書き込む
+            {t("settings_mode.write_to_module", "Write to Module")}
           </Button>
         </div>
       </div>
@@ -397,12 +399,12 @@ export default function SettingsModeTab() {
           <Card className="shadow-none border-border">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg">
-                基本設定 (Address & Channel)
+                {t("settings_mode.basic_settings", "Basic Settings (Address & Channel)")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="address">モジュールアドレス (ADDH, ADDL)</Label>
+                <Label htmlFor="address">{t("settings_mode.module_address", "Module Address (ADDH, ADDL)")}</Label>
                 <Input
                   id="address"
                   placeholder="0x0000"
@@ -410,11 +412,11 @@ export default function SettingsModeTab() {
                   onChange={(e) => setAddress(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Hexフォーマット: 0x0000 - 0xFFFF
+                  {t("settings_mode.hex_format_address", "Hex format: 0x0000 - 0xFFFF")}
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="channel">通信チャンネル (REG2)</Label>
+                <Label htmlFor="channel">{t("settings_mode.communication_channel", "Communication Channel (REG2)")}</Label>
                 <Input
                   id="channel"
                   type="number"
@@ -423,11 +425,11 @@ export default function SettingsModeTab() {
                   onChange={(e) => setChannel(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  0 - 83 (通信周波数: 400M + CH * 1M)
+                  {t("settings_mode.channel_desc", "0 - 83 (Frequency: 400M + CH * 1M)")}
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="crypto">暗号化キー (CRYPT)</Label>
+                <Label htmlFor="crypto">{t("settings_mode.crypto_key", "Crypto Key (CRYPT)")}</Label>
                 <Input
                   id="crypto"
                   placeholder="0x0000"
@@ -435,7 +437,7 @@ export default function SettingsModeTab() {
                   onChange={(e) => setCryptoKey(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Hexフォーマット: 0x0000 - 0xFFFF (Write-only usually)
+                  {t("settings_mode.hex_format_address", "Hex format: 0x0000 - 0xFFFF")} (Write-only usually)
                 </p>
               </div>
             </CardContent>
@@ -444,12 +446,12 @@ export default function SettingsModeTab() {
           {/* REG0: UART & RF Rate */}
           <Card className="shadow-none border-border">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg">通信速度 (REG0)</CardTitle>
+              <CardTitle className="text-lg">{t("settings_mode.speed_settings", "Communication Speed (REG0)")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>UART ボーレート</Label>
+                  <Label>{t("settings_mode.uart_baudrate", "UART Baud Rate")}</Label>
                   <Select value={uartBaudRate} onValueChange={setUartBaudRate}>
                     <SelectTrigger>
                       <SelectValue placeholder="Baud Rate" />
@@ -467,7 +469,7 @@ export default function SettingsModeTab() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>UART パリティ</Label>
+                  <Label>{t("settings_mode.uart_parity", "UART Parity")}</Label>
                   <Select value={uartParity} onValueChange={setUartParity}>
                     <SelectTrigger>
                       <SelectValue placeholder="Parity" />
@@ -481,15 +483,15 @@ export default function SettingsModeTab() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>エアデータレート (Air Data Rate)</Label>
+                <Label>{t("settings_mode.air_data_rate", "Air Data Rate")}</Label>
                 <Select value={airDataRate} onValueChange={setAirDataRate}>
                   <SelectTrigger>
                     <SelectValue placeholder="Data Rate" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0.3">0.3 kbps (最長距離)</SelectItem>
+                    <SelectItem value="0.3">0.3 kbps</SelectItem>
                     <SelectItem value="1.2">1.2 kbps</SelectItem>
-                    <SelectItem value="2.4">2.4 kbps (デフォルト)</SelectItem>
+                    <SelectItem value="2.4">2.4 kbps{t("settings_mode.default_suffix", " (Default)")}</SelectItem>
                     <SelectItem value="4.8">4.8 kbps</SelectItem>
                     <SelectItem value="9.6">9.6 kbps</SelectItem>
                     <SelectItem value="19.2">19.2 kbps</SelectItem>
@@ -502,11 +504,11 @@ export default function SettingsModeTab() {
           {/* REG1: Transmission Settings */}
           <Card className="shadow-none border-border">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg">パケット & 出力 (REG1)</CardTitle>
+              <CardTitle className="text-lg">{t("settings_mode.packet_power", "Packet & Power (REG1)")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>サブパケットサイズ</Label>
+                <Label>{t("settings_mode.sub_packet_size", "Sub-packet Size")}</Label>
                 <Select value={subPacketSize} onValueChange={setSubPacketSize}>
                   <SelectTrigger>
                     <SelectValue placeholder="Packet Size" />
@@ -520,14 +522,14 @@ export default function SettingsModeTab() {
                 </Select>
               </div>
               <div className="flex items-center justify-between">
-                <Label>アンビエントノイズ RSSI 出力</Label>
+                <Label>{t("settings_mode.ambient_noise", "Ambient Noise RSSI Output")}</Label>
                 <Switch
                   checked={ambientNoiseRssi}
                   onCheckedChange={setAmbientNoiseRssi}
                 />
               </div>
               <div className="space-y-2">
-                <Label>送信出力 (Tx Power)</Label>
+                <Label>{t("settings_mode.tx_power", "Tx Power")}</Label>
                 <Select value={transmitPower} onValueChange={setTransmitPower}>
                   <SelectTrigger>
                     <SelectValue placeholder="Power" />
@@ -546,18 +548,18 @@ export default function SettingsModeTab() {
           {/* REG3: Advanced Options */}
           <Card className="shadow-none border-border">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg">高度な設定 (REG3)</CardTitle>
+              <CardTitle className="text-lg">{t("settings_mode.advanced_settings", "Advanced Settings (REG3)")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label>RSSI バイト付与 (受信パケット)</Label>
+                <Label>{t("settings_mode.rssi_byte_enable", "Append RSSI Byte (RX)")}</Label>
                 <Switch
                   checked={rssiByteEnable}
                   onCheckedChange={setRssiByteEnable}
                 />
               </div>
               <div className="space-y-2">
-                <Label>送信モード</Label>
+                <Label>{t("settings_mode.transmission_method", "Transmission Method")}</Label>
                 <Select
                   value={transmissionMethod}
                   onValueChange={setTransmissionMethod}
@@ -567,20 +569,20 @@ export default function SettingsModeTab() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="transparent">
-                      トランスペアレント送信 (透過)
+                      {t("settings_mode.transparent_transmission", "Transparent Transmission")}
                     </SelectItem>
                     <SelectItem value="fixed">
-                      Fixed送信 (固定アドレス)
+                      {t("settings_mode.fixed_transmission", "Fixed Transmission")}
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex items-center justify-between">
-                <Label>LBT (Listen Before Talk) 有効</Label>
+                <Label>{t("settings_mode.lbt_enable", "LBT (Listen Before Talk)")}</Label>
                 <Switch checked={lbtEnable} onCheckedChange={setLbtEnable} />
               </div>
               <div className="space-y-2">
-                <Label>WOR サイクル (Wake-on-Radio)</Label>
+                <Label>{t("settings_mode.wor_cycle", "WOR Cycle")}</Label>
                 <Select value={worCycle} onValueChange={setWorCycle}>
                   <SelectTrigger>
                     <SelectValue placeholder="WOR Cycle" />
@@ -589,7 +591,7 @@ export default function SettingsModeTab() {
                     <SelectItem value="500">500 ms</SelectItem>
                     <SelectItem value="1000">1000 ms</SelectItem>
                     <SelectItem value="1500">1500 ms</SelectItem>
-                    <SelectItem value="2000">2000 ms (デフォルト)</SelectItem>
+                    <SelectItem value="2000">2000 ms{t("settings_mode.default_suffix", " (Default)")}</SelectItem>
                     <SelectItem value="2500">2500 ms</SelectItem>
                     <SelectItem value="3000">3000 ms</SelectItem>
                     <SelectItem value="3500">3500 ms</SelectItem>

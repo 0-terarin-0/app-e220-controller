@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import {
   Tabs as ShadcnTabs,
   TabsContent,
@@ -13,13 +15,15 @@ import ReceiveModeTab from "@/components/ReceiveModeTab";
 import SendModeTab from "@/components/SendModeTab";
 
 export default function Tabs() {
+  const { t } = useTranslation();
+
   return (
     <ShadcnTabs defaultValue="normal" className="flex flex-col h-full w-full">
       <TabsList className="grid w-full grid-cols-4 shrink-0">
-        <TabsTrigger value="normal">通常モード</TabsTrigger>
-        <TabsTrigger value="settings">設定モード</TabsTrigger>
-        <TabsTrigger value="receive">受信モード</TabsTrigger>
-        <TabsTrigger value="send">送信モード</TabsTrigger>
+        <TabsTrigger value="normal">{t("tabs.normal_mode", "Normal Mode")}</TabsTrigger>
+        <TabsTrigger value="settings">{t("tabs.settings_mode", "Settings Mode")}</TabsTrigger>
+        <TabsTrigger value="receive">{t("tabs.receive_mode", "Receive Mode")}</TabsTrigger>
+        <TabsTrigger value="send">{t("tabs.send_mode", "Send Mode")}</TabsTrigger>
       </TabsList>
 
       <div className="flex-1 mt-4 overflow-hidden relative">

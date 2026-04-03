@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Send, Trash2, ArrowUp, Info } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -52,6 +53,7 @@ type LogEntry = {
 };
 
 export default function SendModeTab() {
+  const { t } = useTranslation();
   const { port } = useSerial();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -86,7 +88,7 @@ export default function SendModeTab() {
 
   const handleSend = async () => {
     if (!port || !port.writable) {
-      toast.error("ポートが接続されていないか、書き込みできません。");
+      toast.error(t("messages.port_not_connected_or_unwritable", "Port is not connected or not writable."));
       return;
     }
     if (!inputMessage.trim()) return;
@@ -109,7 +111,7 @@ export default function SendModeTab() {
         payload = textEncoder.encode(text);
       }
     } catch (err: any) {
-      toast.error(`入力データのエラー: ${err.message}`);
+      toast.error(t("messages.input_data_error", { message: err.message, defaultValue: `Input Error: ${err.message}` }));
       return;
     }
 
@@ -121,7 +123,7 @@ export default function SendModeTab() {
       addLog("TX", payload);
     } catch (err: any) {
       console.error("Write error:", err);
-      toast.error(`送信エラー: ${err.message}`);
+      toast.error(t("messages.send_error", { message: err.message, defaultValue: `Send Error: ${err.message}` }));
     }
   };
 
@@ -141,13 +143,13 @@ export default function SendModeTab() {
       <div className="bg-purple-500/10 border border-purple-500/20 rounded-md p-4 flex items-start gap-3 shrink-0 mb-4">
         <Info className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />
         <div className="text-sm text-purple-600 dark:text-purple-400">
-          <p className="font-semibold mb-1">WOR (Wake On Radio) 送信モード</p>
+          <p className="font-semibold mb-1">{t("send_mode.warning_title", "WOR (Wake On Radio) Send Mode")}</p>
           <p>
-            このモードを使用するには、E220モジュールの{" "}
-            <strong>M0ピンを LOW(0)</strong>、<strong>M1ピンを HIGH(1)</strong>{" "}
-            に設定してください。
+            {t("send_mode.warning_desc_1", "To use this mode, configure the E220 module with")} 
+            <strong>{t("send_mode.warning_desc_m0", "M0 pin LOW (0)")}</strong>{" and "}<strong>{t("send_mode.warning_desc_m1", "M1 pin HIGH (1)")}</strong>
+            {t("send_mode.warning_desc_2", ".")}
             <br />
-            WOR送信（ウェイクアップ送信）を行い、スリープ状態の相手を起動させてからデータを送信します。
+            {t("send_mode.warning_desc_3", "It performs a WOR transmission (wake-up transmission), waking up the sleeping receiver before sending the data.")}
           </p>
         </div>
       </div>
@@ -155,10 +157,9 @@ export default function SendModeTab() {
       <Card className="flex flex-col flex-1 overflow-hidden shadow-none border-border">
         <CardHeader className="pb-4 shrink-0 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg">WOR送信モード</CardTitle>
+            <CardTitle className="text-lg">{t("send_mode.title", "WOR Send Mode")}</CardTitle>
             <CardDescription>
-              スリープ状態の受信機 (WOR受信モード)
-              を起こすためのプリアンブルを付与して送信します。
+              {t("send_mode.description", "Sends data with a preamble to wake up a sleeping receiver (WOR Receive Mode).")}
             </CardDescription>
           </div>
           <Button
@@ -168,14 +169,14 @@ export default function SendModeTab() {
             className="gap-2"
           >
             <Trash2 className="h-4 w-4" />
-            ログ消去
+            {t("send_mode.clear_log", "Clear Logs")}
           </Button>
         </CardHeader>
         <CardContent className="flex flex-col flex-1 overflow-hidden space-y-4 pt-0">
           {/* Sender Area */}
           <div className="shrink-0 space-y-3">
             <div className="flex items-center justify-between px-1">
-              <span className="text-sm font-semibold">データ送信</span>
+              <span className="text-sm font-semibold">{t("send_mode.data_transmission", "Send Data")}</span>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Switch
@@ -187,7 +188,7 @@ export default function SendModeTab() {
                     htmlFor="tx-send-hex"
                     className="text-xs cursor-pointer"
                   >
-                    Hex(16進数)として解釈
+                    {t("send_mode.interpret_as_hex", "Interpret as Hex")}
                   </Label>
                 </div>
                 <div className="flex items-center gap-2">
@@ -200,7 +201,7 @@ export default function SendModeTab() {
                     htmlFor="tx-append-crlf"
                     className="text-xs cursor-pointer"
                   >
-                    CRLF(\r\n)を付与
+                    {t("send_mode.append_crlf", "Append CRLF")}
                   </Label>
                 </div>
               </div>
@@ -209,8 +210,8 @@ export default function SendModeTab() {
               <Input
                 placeholder={
                   sendAsHex
-                    ? "送信する16進数を入力 (例: 0A 1B 2C)..."
-                    : "送信するテキストを入力 (半角英数字)..."
+                    ? t("send_mode.placeholder_hex", "Enter hex values (e.g. 0A 1B 2C)...")
+                    : t("send_mode.placeholder_text", "Enter text (Alphanumeric)...")
                 }
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
@@ -219,7 +220,7 @@ export default function SendModeTab() {
               />
               <Button onClick={handleSend} className="gap-2 shrink-0 h-10 px-6">
                 <Send className="h-4 w-4" />
-                送信
+                {t("send_mode.send", "Send")}
               </Button>
             </div>
           </div>
@@ -227,7 +228,7 @@ export default function SendModeTab() {
           {/* Log Area */}
           <div className="flex flex-col flex-1 overflow-hidden space-y-2">
             <div className="flex items-center justify-between px-1 shrink-0 mt-2">
-              <span className="text-sm font-semibold">送信履歴</span>
+              <span className="text-sm font-semibold">{t("send_mode.transmission_history", "Transmission History")}</span>
             </div>
 
             <ScrollArea
@@ -237,7 +238,7 @@ export default function SendModeTab() {
               <div className="flex flex-col">
                 {logs.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    送信履歴はありません。
+                    {t("send_mode.no_history", "No history found.")}
                   </p>
                 ) : (
                   logs.map((log) => (

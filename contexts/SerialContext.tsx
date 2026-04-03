@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  useRef,
+} from "react";
 import { tauriSerial } from "@/lib/tauri-serial";
 
 type PortInfo = {
@@ -22,11 +29,13 @@ export function SerialProvider({ children }: { children: ReactNode }) {
   const [port, setPort] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [portInfo, setPortInfo] = useState<PortInfo | null>(null);
+  const baudRateRef = useRef<number | null>(null);
 
   const connect = async (baudRate: number) => {
     try {
       setError(null);
 
+      baudRateRef.current = baudRate;
       const isTauriEnv =
         typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
       let requestedPort: any;
@@ -72,6 +81,59 @@ export function SerialProvider({ children }: { children: ReactNode }) {
       }
     }
   };
+
+  useEffect(() => {
+    const isTauriEnv =
+      typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+
+    if (
+      !isTauriEnv &&
+      typeof navigator !== "undefined" &&
+      "serial" in navigator
+    ) {
+      const handleDisconnect = (e: any) => {
+        if (port && e.target === port) {
+          console.log("Device disconnected (Web)");
+          setPort(null);
+          setPortInfo(null);
+        }
+      };
+
+      const handleConnect = async (e: any) => {
+        console.log("Device connected (Web)");
+        if (baudRateRef.current && !port) {
+          try {
+            const ports = await (navigator as any).serial.getPorts();
+            if (ports.length > 0) {
+              const p = ports[0];
+              await p.open({ baudRate: baudRateRef.current });
+              setPort(p);
+              const info = await p.getInfo();
+              if (info) {
+                setPortInfo({ vid: info.usbVendorId, pid: info.usbProductId });
+              }
+            }
+          } catch (err) {
+            console.error("Auto-reconnect failed:", err);
+          }
+        }
+      };
+
+      (navigator as any).serial.addEventListener(
+        "disconnect",
+        handleDisconnect,
+      );
+      (navigator as any).serial.addEventListener("connect", handleConnect);
+
+      return () => {
+        (navigator as any).serial.removeEventListener(
+          "disconnect",
+          handleDisconnect,
+        );
+        (navigator as any).serial.removeEventListener("connect", handleConnect);
+      };
+    }
+  }, [port]);
 
   return (
     <SerialContext.Provider

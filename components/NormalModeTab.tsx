@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Send, Trash2, ArrowDown, ArrowUp, Info } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 // Helper functions for data conversion
 const textEncoder = new TextEncoder();
@@ -53,6 +54,7 @@ type LogEntry = {
 };
 
 export default function NormalModeTab() {
+  const { t } = useTranslation();
   const { port } = useSerial();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -95,7 +97,7 @@ export default function NormalModeTab() {
     const readLoop = async () => {
       try {
         reader = port.readable.getReader();
-        addLog("INFO", "受信待機を開始しました...");
+        addLog("INFO", t("normal_mode.wait_receive", "Started waiting for reception..."));
         while (keepReading) {
           const { value, done } = await reader!.read();
           if (done) break;
@@ -106,7 +108,7 @@ export default function NormalModeTab() {
       } catch (error: any) {
         if (keepReading) {
           console.error("Read loop error:", error);
-          addLog("INFO", `読み取りエラー: ${error.message}`);
+          addLog("INFO", t("messages.read_error", "Read error: ") + error.message);
         }
       } finally {
         if (reader) {
@@ -127,7 +129,7 @@ export default function NormalModeTab() {
 
   const handleSend = async () => {
     if (!port || !port.writable) {
-      toast.error("ポートが接続されていないか、書き込みできません。");
+      toast.error(t("messages.port_not_connected_or_unwritable", "Port is not connected or not writable."));
       return;
     }
     if (!inputMessage.trim()) return;
@@ -150,7 +152,7 @@ export default function NormalModeTab() {
         payload = textEncoder.encode(text);
       }
     } catch (err: any) {
-      toast.error(`入力データのエラー: ${err.message}`);
+      toast.error(t("messages.input_data_error", { message: err.message, defaultValue: `Input Error: ${err.message}` }));
       return;
     }
 
@@ -162,7 +164,7 @@ export default function NormalModeTab() {
       addLog("TX", payload);
     } catch (err: any) {
       console.error("Write error:", err);
-      toast.error(`送信エラー: ${err.message}`);
+      toast.error(t("messages.send_error", { message: err.message, defaultValue: `Send Error: ${err.message}` }));
     }
   };
 
@@ -182,9 +184,9 @@ export default function NormalModeTab() {
       <Card className="flex flex-col flex-1 overflow-hidden shadow-none border-border">
         <CardHeader className="pb-4 shrink-0 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg">通常モード (送受信テスト)</CardTitle>
+            <CardTitle className="text-lg">{t("normal_mode.title", "Normal Mode (Test TX/RX)")}</CardTitle>
             <CardDescription>
-              E220モジュールを経由してデータを送受信します。
+              {t("normal_mode.description", "Send and receive data via E220 module.")}
             </CardDescription>
           </div>
           <Button
@@ -194,14 +196,14 @@ export default function NormalModeTab() {
             className="gap-2"
           >
             <Trash2 className="h-4 w-4" />
-            ログ消去
+            {t("normal_mode.clear_log", "Clear Logs")}
           </Button>
         </CardHeader>
         <CardContent className="flex flex-col flex-1 overflow-hidden space-y-4 pt-0">
           {/* Receiver / Log Area */}
           <div className="flex flex-col flex-1 overflow-hidden space-y-2">
             <div className="flex items-center justify-between px-1 shrink-0">
-              <span className="text-sm font-semibold">通信ログ</span>
+              <span className="text-sm font-semibold">{t("normal_mode.communication_log", "Communication Log")}</span>
             </div>
 
             <ScrollArea
@@ -211,7 +213,7 @@ export default function NormalModeTab() {
               <div className="flex flex-col">
                 {logs.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    通信ログはありません。
+                    {t("normal_mode.no_log", "No communication logs.")}
                   </p>
                 ) : (
                   logs.map((log) => (
@@ -270,7 +272,7 @@ export default function NormalModeTab() {
           {/* Sender Area */}
           <div className="shrink-0 space-y-3 pt-2">
             <div className="flex items-center justify-between px-1">
-              <span className="text-sm font-semibold">データ送信</span>
+              <span className="text-sm font-semibold">{t("normal_mode.data_transmission", "Send Data")}</span>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Switch
@@ -279,7 +281,7 @@ export default function NormalModeTab() {
                     onCheckedChange={setSendAsHex}
                   />
                   <Label htmlFor="send-hex" className="text-xs cursor-pointer">
-                    Hex(16進数)として解釈
+                    {t("normal_mode.interpret_as_hex", "Interpret as Hex")}
                   </Label>
                 </div>
                 <div className="flex items-center gap-2">
@@ -292,7 +294,7 @@ export default function NormalModeTab() {
                     htmlFor="append-crlf"
                     className="text-xs cursor-pointer"
                   >
-                    CRLF(\r\n)を付与
+                    {t("normal_mode.append_crlf", "Append CRLF")}
                   </Label>
                 </div>
               </div>
@@ -301,8 +303,8 @@ export default function NormalModeTab() {
               <Input
                 placeholder={
                   sendAsHex
-                    ? "送信する16進数を入力 (例: 0A 1B 2C)..."
-                    : "送信するテキストを入力 (半角英数字)..."
+                    ? t("normal_mode.placeholder_hex", "Enter hex values (e.g. 0A 1B 2C)...")
+                    : t("normal_mode.placeholder_text", "Enter text (Alphanumeric)...")
                 }
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}

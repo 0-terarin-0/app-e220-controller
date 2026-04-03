@@ -12,6 +12,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Trash2, Info, ArrowDown, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const textDecoder = new TextDecoder();
 
@@ -34,6 +35,7 @@ type LogEntry = {
 };
 
 export default function ReceiveModeTab() {
+  const { t } = useTranslation();
   const { port } = useSerial();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -72,7 +74,7 @@ export default function ReceiveModeTab() {
     const readLoop = async () => {
       try {
         reader = port.readable.getReader();
-        addLog("INFO", "受信待機を開始しました...");
+        addLog("INFO", t("normal_mode.wait_receive", "Started waiting for reception..."));
         while (keepReading) {
           const { value, done } = await reader!.read();
           if (done) break;
@@ -83,7 +85,7 @@ export default function ReceiveModeTab() {
       } catch (error: any) {
         if (keepReading) {
           console.error("Read loop error:", error);
-          addLog("INFO", `読み取りエラー: ${error.message}`);
+          addLog("INFO", t("messages.read_error", "Read error: ") + error.message);
         }
       } finally {
         if (reader) {
@@ -112,14 +114,17 @@ export default function ReceiveModeTab() {
         <Info className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
         <div className="text-sm text-blue-600 dark:text-blue-400">
           <p className="font-semibold mb-1">
-            WOR (Wake On Radio) 受信モード / スリープ
+            {t(
+              "receive_mode.warning_title",
+              "WOR (Wake On Radio) Receive Mode / Sleep",
+            )}
           </p>
           <p>
-            このモードを使用するには、E220モジュールの{" "}
-            <strong>M0ピンを HIGH(1)</strong>、<strong>M1ピンを LOW(0)</strong>{" "}
-            に設定してください。
+            {t("receive_mode.warning_desc_1", "To use this mode, configure the E220 module with")} 
+            <strong>{t("receive_mode.warning_desc_m0", "M0 pin HIGH (1)")}</strong>{" and "}<strong>{t("receive_mode.warning_desc_m1", "M1 pin LOW (0)")}</strong>
+            {t("receive_mode.warning_desc_2", ".")}
             <br />
-            通常は低消費電力のスリープ状態にあり、同じチャンネル・アドレスの送信機からプリアンブルを受信した時のみ起動してデータを受け取ります。
+            {t("receive_mode.warning_desc_3", "Normally, it stays in a low-power sleep state and only wakes up to receive data when a preamble is detected from a transmitter on the same channel and address.")}
           </p>
         </div>
       </div>
@@ -127,9 +132,9 @@ export default function ReceiveModeTab() {
       <Card className="flex flex-col flex-1 overflow-hidden shadow-none border-border">
         <CardHeader className="pb-4 shrink-0 flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg">WOR受信ログ</CardTitle>
+            <CardTitle className="text-lg">{t("receive_mode.title", "WOR Receive Log")}</CardTitle>
             <CardDescription>
-              スリープ中に受信したデータを表示します。
+              {t("receive_mode.description", "Displays data received during sleep.")}
             </CardDescription>
           </div>
           <Button
@@ -139,12 +144,12 @@ export default function ReceiveModeTab() {
             className="gap-2"
           >
             <Trash2 className="h-4 w-4" />
-            ログ消去
+            {t("receive_mode.clear_log", "Clear Logs")}
           </Button>
         </CardHeader>
         <CardContent className="flex flex-col flex-1 overflow-hidden space-y-2 pt-0">
           <div className="flex items-center justify-between px-1 shrink-0">
-            <span className="text-sm font-semibold">受信データ</span>
+            <span className="text-sm font-semibold">{t("receive_mode.received_data", "Received Data")}</span>
           </div>
 
           <ScrollArea
@@ -154,7 +159,7 @@ export default function ReceiveModeTab() {
             <div className="flex flex-col">
               {logs.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  受信データはありません。
+                  {t("receive_mode.no_data", "No data received.")}
                 </p>
               ) : (
                 logs.map((log) => (

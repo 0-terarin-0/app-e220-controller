@@ -5,6 +5,7 @@ export class TauriSerialPort {
   public path: string;
   private info: PortInfo;
   private unlistenFn: (() => void) | null = null;
+  public ondisconnect?: () => void;
 
   private _readable: ReadableStream<Uint8Array> | null = null;
   private currentController: ReadableStreamDefaultController<Uint8Array> | null =
@@ -47,6 +48,26 @@ export class TauriSerialPort {
     await this.port.open();
     await this.port.startListening();
 
+    await this.port.enableAutoReconnect({
+      interval: 1000,
+      maxAttempts: null,
+      onReconnect: async (success) => {
+        if (success && this.port) {
+          try {
+            await this.port.startListening();
+          } catch (e) {
+            console.warn("Failed to restart listening after reconnect:", e);
+          }
+        }
+      },
+    });
+
+    this.port.disconnected(() => {
+      console.log(
+        "Device disconnected. Auto-reconnect will try to restore the connection in the background.",
+      );
+    });
+
     // isDecode=false to receive raw binary data (Uint8Array)
     this.unlistenFn = await this.port.listen((data: any) => {
       let chunk: Uint8Array;
@@ -88,6 +109,9 @@ export class TauriSerialPort {
     }
 
     if (this.port) {
+      try {
+        await this.port.disableAutoReconnect();
+      } catch (e) {}
       try {
         await this.port.stopListening();
       } catch (e) {

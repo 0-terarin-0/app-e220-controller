@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useSerial } from "@/contexts/SerialContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import {
 import { Plug, PlugZap, AlertTriangle, Settings2 } from "lucide-react";
 
 export default function SerialConnectButton() {
+  const { t } = useTranslation();
   const { port, error, portInfo, connect, disconnect } = useSerial();
   const [baudRate, setBaudRate] = useState<string>("9600");
   const [ports, setPorts] = useState<string[]>([]);
@@ -68,12 +70,12 @@ export default function SerialConnectButton() {
             className="flex items-center gap-1.5 px-3 py-1 shadow-sm"
           >
             <AlertTriangle className="h-4 w-4" />
-            <span>Connection Error</span>
+            <span>{t("toolbar.connection_error", "Connection Error")}</span>
           </Badge>
         ) : port ? (
           <Badge className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 shadow-sm text-white">
             <Plug className="h-4 w-4" />
-            <span>Connected</span>
+            <span>{t("toolbar.connected", "Connected")}</span>
           </Badge>
         ) : (
           <Badge
@@ -81,7 +83,9 @@ export default function SerialConnectButton() {
             className="flex items-center gap-1.5 px-3 py-1 shadow-sm"
           >
             <PlugZap className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Disconnected</span>
+            <span className="text-muted-foreground">
+              {t("toolbar.disconnected", "Disconnected")}
+            </span>
           </Badge>
         )}
 
@@ -109,12 +113,12 @@ export default function SerialConnectButton() {
               {isTauriEnv && (
                 <Select value={selectedPort} onValueChange={setSelectedPort}>
                   <SelectTrigger className="w-[140px] h-8 text-sm border-none bg-transparent focus:ring-0 focus:ring-offset-0 shadow-none">
-                    <SelectValue placeholder="Select Port" />
+                    <SelectValue placeholder={t("toolbar.select_port", "Select Port")} />
                   </SelectTrigger>
                   <SelectContent>
                     {ports.length === 0 ? (
                       <SelectItem value="none" disabled>
-                        No ports found
+                        {t("toolbar.no_ports_found", "No ports found")}
                       </SelectItem>
                     ) : (
                       ports.map((p) => (
@@ -131,7 +135,7 @@ export default function SerialConnectButton() {
 
               <Select value={baudRate} onValueChange={setBaudRate}>
                 <SelectTrigger className="w-[100px] h-8 text-sm border-none bg-transparent focus:ring-0 focus:ring-offset-0 shadow-none">
-                  <SelectValue placeholder="Baudrate" />
+                  <SelectValue placeholder={t("toolbar.baudrate", "Baudrate")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1200">1200</SelectItem>
